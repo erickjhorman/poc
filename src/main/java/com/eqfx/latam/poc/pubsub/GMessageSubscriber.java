@@ -12,8 +12,8 @@ public class GMessageSubscriber {
     public void consumeNotification() {
         String projectId = ServiceOptions.getDefaultProjectId();
         String subscriptionId = System.getenv("SUBSCRIPTION_ID");
-        log.info(String.format("Project: %s", projectId));
-        log.info(String.format("SubscriptionId: %s", subscriptionId));
+        //log.info(String.format("Project: %s", projectId));
+        //log.info(String.format("SubscriptionId: %s", subscriptionId));
 
         createSubscriber(ProjectSubscriptionName.of(projectId, subscriptionId));
     }
