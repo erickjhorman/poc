@@ -1,7 +1,6 @@
 package com.eqfx.latam.poc.model;
 
-import lombok.*;
-import org.joda.money.Money;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

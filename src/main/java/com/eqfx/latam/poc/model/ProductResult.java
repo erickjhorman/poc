@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-public class ResultProduct implements Serializable {
+public class ProductResult implements Serializable {
     private final Integer productID;
     private final String productName;
     private final BigDecimal avgUnitPrice;
