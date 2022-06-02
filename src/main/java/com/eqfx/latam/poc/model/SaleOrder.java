@@ -15,7 +15,6 @@ import java.time.LocalDate;
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor
-@DefaultSchema(JavaBeanSchema.class)
 public class SaleOrder implements Serializable {
     private final String category;
     private final String subcategory;

@@ -13,8 +13,8 @@ public class CSVRecordUtil {
     }
 
     static CSVRecordMap mockRecord(String[] headers, String... data) throws IOException {
-        String values = StringUtils.join(data, ",");
-        try (CSVParser parser = CSVFormat.DEFAULT.builder().setHeader(headers).build().parse(new StringReader(values))) {
+        String values = StringUtils.join(data, ";");
+        try (CSVParser parser = CSVFormat.DEFAULT.builder().setHeader(headers).setDelimiter(";").build().parse(new StringReader(values))) {
             CSVRecord record = parser.iterator().next();
             return CSVRecordMap.valueOf(record);
         }
