@@ -1,6 +1,7 @@
 package com.eqfx.latam.poc;
 
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
+import com.eqfx.latam.poc.scenario.ScenarioTwoConsumer;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 
@@ -13,7 +14,6 @@ public class Main {
                 .withValidation()
                 .as(ScenarioOptions.class);
 
-
         Pipeline pipeline = Pipeline.create(options);
 
         switch (options.getScenario()){
@@ -23,10 +23,9 @@ public class Main {
                 //TODO save to AVRO
                 break;
             }
-            case TWO: {
-                //TODO same as one but with the second model
+            case TWO:
+                new ScenarioTwoConsumer(options.as(SalesByQuarter.Options.class)).accept(pipeline);
                 break;
-            }
         }
         pipeline.run();
     }
