@@ -10,6 +10,9 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.PCollection;
 
+import static com.eqfx.latam.poc.csv.util.CsvConstants.DELIMITER_SCENARIO_2;
+import static com.eqfx.latam.poc.csv.util.CsvConstants.HEADERS_SCENARIO_2;
+
 public class Main {
     public static void main(String[] args) {
         PipelineOptionsFactory.register(SalesByQuarter.Options.class);
@@ -31,8 +34,8 @@ public class Main {
             case TWO: {
                 PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from csv",
                         CsvIO.read(options.getSourceFile())
-                                .withDelimiter(';')
-                                .withHeaders("ProductCategoryID", "ProductSubcategoryID", "SellEndDate","UnitPrice","OrderQty")
+                                .withDelimiter(DELIMITER_SCENARIO_2)
+                                .withHeaders(HEADERS_SCENARIO_2)
                                 .build()
                 );
                 PCollection<SaleOrder> csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
