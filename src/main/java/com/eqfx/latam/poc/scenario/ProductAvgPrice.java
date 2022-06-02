@@ -35,7 +35,6 @@ public interface ProductAvgPrice {
                 .apply("Map result", ParDo.of(new MapResultFn()));
     }
 
-    // <<1,car> , 100.00>
     class GroupProductFn extends DoFn<Product,KV<KV<Integer,String>,Money>>{
         @ProcessElement
         public void processElement(@Element Product product,
