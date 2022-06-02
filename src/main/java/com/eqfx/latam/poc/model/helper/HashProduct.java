@@ -22,6 +22,7 @@ public class HashProduct {
         quarterProduct.setProductCategoryId(Integer.parseInt(values[0]));
         quarterProduct.setProductSubCategoryId(Integer.parseInt(values[1]));
         quarterProduct.setYear(Integer.parseInt(values[2]));
+        quarterProduct.setQuarter(Integer.parseInt(values[3]));
         return quarterProduct;
     }
 

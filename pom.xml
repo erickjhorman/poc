@@ -14,8 +14,21 @@
         <beam.version>2.38.0</beam.version>
         <junit.version>4.13.2</junit.version>
         <hamcrest.version>2.1</hamcrest.version>
+        <lombok.version>1.18.24</lombok.version>
+        <joda-money.version>1.0.1</joda-money.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.joda</groupId>
+            <artifactId>joda-money</artifactId>
+            <version>${joda-money.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-core</artifactId>
