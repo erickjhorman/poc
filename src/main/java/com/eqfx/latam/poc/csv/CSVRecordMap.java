@@ -8,9 +8,13 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
-@EqualsAndHashCode
+import java.util.UUID;
+
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class CSVRecordMap implements Serializable {
+    @EqualsAndHashCode.Include
+    private final UUID id=UUID.randomUUID();
     private final Map<String,Integer> headerMap;
     private final CSVRecord record;
     public static CSVRecordMap valueOf(CSVRecord record){
