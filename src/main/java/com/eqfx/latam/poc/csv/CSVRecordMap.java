@@ -29,4 +29,13 @@ public class CSVRecordMap implements Serializable {
     public String get(final int i){
         return record.get(i);
     }
+
+    @Override
+    public String toString() {
+        return "CSVRecordMap{" +
+                "id=" + id +
+                ", headerMap=" + headerMap +
+                ", record=" + record +
+                '}';
+    }
 }
