@@ -7,11 +7,10 @@ import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.model.SaleOrder;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
+import com.eqfx.latam.poc.scenario.ScenarioTwoConsumer;
 import com.eqfx.latam.poc.util.Log;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.values.PCollection;
 
 public class Main {
     public static void main(String[] args) {
@@ -26,47 +25,14 @@ public class Main {
 
         switch (options.getScenario()){
             case ONE: {
-                PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from CSV",
-                        CsvIO.read(options.getSourceFile())
-                                .withDelimiter(';')
-                                .withHeaders(	"ProductID", "ProductName",	"ProductNumber",	"MakeFlag",	"FinishedGoodsFlag",	"Color",
-                                        "SafetyStockLevel",	"ReorderPoint",	"StandardCost",	"ListPrice",	"Size",
-                                        "SizeUnitMeasureCode",	"WeightUnitMeasureCode",	"Weight",	"DaysToManufacture",
-                                        "ProductLine",	"Class",	"Style",	"ProductSubcategoryID",	"ProductModelID",
-                                        "SellStartDate",	"SellEndDate",	"DiscontinuedDate",	"SalesOrderDetailID",
-                                        "CarrierTrackingNumber",	"OrderQty",	"SpecialOfferID",	"UnitPrice",	"UnitPriceDiscount",
-                                        "LineTotal"
-                                )
-                                .build()
-                );
-
-                PCollection<Product> csvMapped = csvRecordMap.apply("Parse to Product",
-                        CsvParsers.products());
-
-                PCollection<ProductAvgPrice.Result> result = ProductAvgPrice
-                        .apply(options.as(ProductAvgPrice.Options.class), csvMapped);
-
-
-                result.apply("Save to AVRO",
-                        AvroIO.write(ProductAvgPrice.Result.class)
-                                .to(options.getTargetFile())
-                                .withSuffix(".avro"));
+                //TODO parse the csv model to the product model
+                //TODO call the correct scenario e.j. ProductAvgPrice.apply(...)
+                //TODO save to AVRO
                 break;
             }
-            case TWO: {
-                PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from csv",
-                        CsvIO.read(options.getSourceFile())
-                                .withDelimiter(';')
-                                .withHeaders("ProductCategoryID", "ProductSubcategoryID", "SellEndDate","UnitPrice","OrderQty")
-                                .build()
-                );
-                PCollection<SaleOrder> csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
-                PCollection<SalesByQuarter.Result> result = SalesByQuarter.apply(options.as(SalesByQuarter.Options.class), csvMapped);
-                result.apply("Save to avro", AvroIO.write(SalesByQuarter.Result.class)
-                        .to(options.getTargetFile())
-                        .withSuffix(".avro"));
+            case TWO:
+                new ScenarioTwoConsumer(options.as(SalesByQuarter.Options.class)).accept(pipeline);
                 break;
-            }
         }
         pipeline.run();
     }
