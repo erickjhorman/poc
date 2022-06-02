@@ -53,7 +53,7 @@ public class MainTransformTest {
         PCollection<QuarterProduct> actualResult = Main.applyTransformOfScenario2(products);
 
         PAssert.that(actualResult)
-                .containsInAnyOrder(GenerateMockData.createQuarterProductMockObject(1, 1, 1,2013, 300),
+                .containsInAnyOrder(GenerateMockData.createQuarterProductMockObject(1, 1, 2013, 1,300),
                         GenerateMockData.createQuarterProductMockObject(1, 1, 2014, 1,900)
                 );
         testPipeline.run().waitUntilFinish();
