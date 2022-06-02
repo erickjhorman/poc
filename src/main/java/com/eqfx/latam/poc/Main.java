@@ -16,7 +16,6 @@ public class Main {
                 .withValidation()
                 .as(ScenarioOptions.class);
 
-
         Pipeline pipeline = Pipeline.create(options);
 
         switch (options.getScenario()){
@@ -34,7 +33,17 @@ public class Main {
                 break;
             }
             case TWO: {
-                //TODO same as one but with the second model
+                PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from csv",
+                        CsvIO.read(options.getSourceFile())
+                                .withDelimiter(';')
+                                .withHeaders("ProductCategoryID", "ProductSubcategoryID", "SellEndDate","UnitPrice","OrderQty")
+                                .build()
+                );
+                PCollection<SaleOrder> csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
+                PCollection<SalesByQuarter.Result> result = SalesByQuarter.apply(options.as(SalesByQuarter.Options.class), csvMapped);
+                result.apply("Save to avro", AvroIO.write(SalesByQuarter.Result.class)
+                        .to(options.getTargetFile())
+                        .withSuffix(".avro"));
                 break;
             }
         }
