@@ -26,7 +26,6 @@ public class Main {
 
         switch (options.getScenario()){
             case ONE: {
-                //TODO parse the csv model to the product model
                 PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from CSV",
                         CsvIO.read(options.getSourceFile())
                                 .withDelimiter(';')
@@ -44,13 +43,10 @@ public class Main {
                 PCollection<Product> csvMapped = csvRecordMap.apply("Parse to Product",
                         CsvParsers.products());
 
-                //TODO call the correct scenario e.j. ProductAvgPrice.apply(...)
                 PCollection<ProductAvgPrice.Result> result = ProductAvgPrice
                         .apply(options.as(ProductAvgPrice.Options.class), csvMapped);
 
-                result.apply(Log.ofElements());
 
-                //TODO save to AVRO
                 result.apply("Save to AVRO",
                         AvroIO.write(ProductAvgPrice.Result.class)
                                 .to(options.getTargetFile())
