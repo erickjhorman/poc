@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.channels.Channels;
 import java.util.Objects;
+import java.util.Optional;
 
 public interface CsvIO {
     static Read.Builder read(String file){
@@ -26,12 +27,16 @@ public interface CsvIO {
             return new Builder(file);
         }
 
-        private Read(String file, String[] headers, char delimiter) {
+        private Read(String file,
+                     String[] headers,
+                     char delimiter,
+                     String nullString) {
             this.file = Objects.requireNonNull(file);
             this.csvFormat = CSVFormat.Builder.create()
                     .setHeader(Objects.requireNonNull(headers))
                     .setDelimiter(delimiter)
                     .setSkipHeaderRecord(true)
+                    .setNullString(Optional.ofNullable(nullString).orElse("NULL"))
                     .build();
         }
 
@@ -56,12 +61,17 @@ public interface CsvIO {
             private final String file;
             private String[] headers;
             private char delimiter;
+            private String nullString;
 
             private Builder(String file) { this.file = file; }
 
 
             public Builder withHeaders(String... headers) {
                 this.headers = headers;
+                return this;
+            }
+            public Builder withNullString(String nullString) {
+                this.nullString = nullString;
                 return this;
             }
 
@@ -71,7 +81,7 @@ public interface CsvIO {
             }
 
             public Read build() {
-                return new Read(file, headers, delimiter);
+                return new Read(file, headers, delimiter,nullString);
             }
         }
     }
