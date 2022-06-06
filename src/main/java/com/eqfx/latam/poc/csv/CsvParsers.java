@@ -2,8 +2,6 @@ package com.eqfx.latam.poc.csv;
 
 import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.model.SaleOrder;
-import com.eqfx.latam.poc.scenario.ProductAvgPrice;
-import org.apache.beam.repackaged.core.org.antlr.v4.runtime.misc.IntegerList;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 
@@ -20,7 +18,7 @@ public class CsvParsers {
         return CsvParser.of(SaleOrder.class).using(input -> {
             String category = input.get("ProductCategoryID");
             String subCategory = input.get("ProductSubcategoryID");
-            String dateValue = input.get("SellEndDate");
+            String dateValue = input.get("OrderDate");
             LocalDate date = NULL.equals(dateValue) ? null:LocalDateTime.parse(dateValue, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")).toLocalDate();
             Money unitPrice = Money.of(CurrencyUnit.USD, Double.parseDouble(replaceDoubleValue(input.get("UnitPrice"))), RoundingMode.DOWN);
             Integer qty = Integer.valueOf(input.get("OrderQty"));
