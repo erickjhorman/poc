@@ -23,6 +23,7 @@ public class SalesByQuarterTest {
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/M/yyyy");
 
     static final List<SaleOrder> sales = List.of(
+            new SaleOrder("Category", "SubCategory", null, Money.of(USD, 50.00), 2),
             new SaleOrder("Category", "SubCategory", parseDate("15/01/2013"), Money.of(USD, 50.00), 2),
             new SaleOrder("Category", "SubCategory", parseDate("22/02/2013"), Money.of(USD, 50.99), 1),
             new SaleOrder("Category", "SubCategory", parseDate("11/04/2013"), Money.of(USD, 100.00), 5),
