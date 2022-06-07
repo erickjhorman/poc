@@ -27,7 +27,7 @@ public interface SalesByQuarter {
 
     static PCollection<Result> apply(Options options, PCollection<SaleOrder> sales){
         List<Integer> years = options.getYears();
-        return sales.apply("Filter years", Filter.by(sale-> sale.getDate() != null && years.contains(sale.getDate().getYear())))
+        return sales.apply("Filter years", Filter.by(sale-> sale.getDate().map(LocalDate::getYear).filter(years::contains).isPresent()))
                 .apply("Group by quarter and year", ParDo.of(new GroupSalesFn()))
                 .apply("Sum sales", Combine.perKey(Money::plus))
                 .apply("Map result",ParDo.of(new MapResultFn()));
@@ -40,18 +40,19 @@ public interface SalesByQuarter {
         public void processElement(@Element SaleOrder order,
                                    OutputReceiver<KV<KV<KV<Integer,Integer>,KV<String,String>>,Money>> outputReceiver){
 
-            LocalDate date = order.getDate();
-            int year = date.getYear();
-            int quarter = date.get(IsoFields.QUARTER_OF_YEAR);
+            order.getDate().ifPresent(date -> {
 
-            KV<Integer, Integer> yearQuarter = KV.of(year, quarter);
-            KV<String, String> category = KV.of(order.getCategory(), order.getSubcategory());
-            Money sale = order.getUnitPrice().multipliedBy(order.getQty());
+                int year = date.getYear();
+                int quarter = date.get(IsoFields.QUARTER_OF_YEAR);
 
-            outputReceiver.output(KV.of(
-                    KV.of(yearQuarter,category),
-                    sale
-            ));
+                KV<Integer, Integer> yearQuarter = KV.of(year, quarter);
+                KV<String, String> category = KV.of(order.getCategory(), order.getSubcategory());
+                Money sale = order.getUnitPrice().multipliedBy(order.getQty());
+                outputReceiver.output(KV.of(
+                        KV.of(yearQuarter, category),
+                        sale
+                ));
+            });
         }
     }
     class MapResultFn extends DoFn<KV<KV<KV<Integer,Integer>,KV<String,String>>,Money>
@@ -69,7 +70,7 @@ public interface SalesByQuarter {
             outputReceiver.output(result);
         }
     }
-    
+
     @Getter
     @ToString
     @RequiredArgsConstructor

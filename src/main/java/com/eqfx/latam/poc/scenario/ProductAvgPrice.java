@@ -2,6 +2,7 @@ package com.eqfx.latam.poc.scenario;
 
 import com.eqfx.latam.poc.ScenarioOptions;
 import com.eqfx.latam.poc.model.Product;
+import com.eqfx.latam.poc.util.MoneyMean;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,17 +10,16 @@ import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.Validation;
-import org.apache.beam.sdk.transforms.*;
+import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 
 import java.io.Serializable;
-import java.math.RoundingMode;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,7 +29,7 @@ public interface ProductAvgPrice {
         Money abovePrice = Money.of(CurrencyUnit.USD,options.getAbovePrice());
 
         return products.apply("Group product by id and name",ParDo.of(new GroupProductFn()))
-                .apply("Compute Average", Combine.perKey(new MoneyAvgFn()))
+                .apply("Compute Average", Combine.perKey(new MoneyMean()))
                 .apply(String.format("Filter average price above %.2f", abovePrice.getAmount()),
                         Filter.by(kv -> requireNonNull(kv.getValue()).isGreaterThan(abovePrice)))
                 .apply("Map result", ParDo.of(new MapResultFn()));
@@ -52,15 +52,6 @@ public interface ProductAvgPrice {
             Money value = requireNonNull(element.getValue());
             Result result = new Result(key.getKey(), key.getValue(), value);
             outputReceiver.output(result);
-        }
-    }
-    class MoneyAvgFn implements SerializableFunction<Iterable<Money>, Money> {
-        @Override
-        public Money apply(Iterable<Money> input) {
-            List<Money> list = StreamSupport.stream(input.spliterator(),false).collect(Collectors.toList());
-            return list.stream().
-                    reduce(Money.zero(CurrencyUnit.USD), Money::plus)
-                    .dividedBy(list.size(), RoundingMode.DOWN);
         }
     }
 
