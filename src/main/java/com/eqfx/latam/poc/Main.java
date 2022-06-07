@@ -6,7 +6,7 @@ import com.eqfx.latam.poc.csv.CsvParsers;
 import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
-import com.eqfx.latam.poc.scenario.ScenarioTwoConsumer;
+import com.eqfx.latam.poc.scenario.ScenarioTwoBiConsumer;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -54,7 +54,7 @@ public class Main {
                 break;
             }
             case TWO:
-                new ScenarioTwoConsumer(options.as(SalesByQuarter.Options.class)).accept(pipeline);
+                new ScenarioTwoBiConsumer().accept(pipeline, options.as(SalesByQuarter.Options.class));
                 break;
         }
         pipeline.run();

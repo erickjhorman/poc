@@ -19,7 +19,7 @@ public class CsvParsers {
         return CsvParser.of(SaleOrder.class).using(input -> {
             String category = input.get("ProductCategoryID");
             String subCategory = input.get("ProductSubcategoryID");
-            LocalDate date = Optional.ofNullable(input.get("SellEndDate"))
+            LocalDate date = Optional.ofNullable(input.get("OrderDate"))
                     .filter(e->!e.isEmpty())
                     .map(dateValue->LocalDateTime.parse(dateValue, formatter))
                     .map(LocalDateTime::toLocalDate)

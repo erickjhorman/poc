@@ -4,26 +4,21 @@ import com.eqfx.latam.poc.csv.CSVRecordMap;
 import com.eqfx.latam.poc.csv.CsvIO;
 import com.eqfx.latam.poc.csv.CsvParsers;
 import com.eqfx.latam.poc.model.SaleOrder;
+import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.values.PCollection;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static com.eqfx.latam.poc.csv.util.CsvConstants.DELIMITER_SCENARIO_2;
 import static com.eqfx.latam.poc.csv.util.CsvConstants.HEADERS_SCENARIO_2;
 
-public class ScenarioTwoConsumer implements Consumer<Pipeline> {
-
-    SalesByQuarter.Options options;
-
-    public ScenarioTwoConsumer(SalesByQuarter.Options options){
-        this.options = options;
-    }
+@NoArgsConstructor
+public class ScenarioTwoBiConsumer implements BiConsumer<Pipeline, SalesByQuarter.Options> {
 
     @Override
-    public void accept(Pipeline pipeline){
+    public void accept(Pipeline pipeline, SalesByQuarter.Options options){
         PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from csv",
                 CsvIO.read(options.getSourceFile())
                         .withDelimiter(DELIMITER_SCENARIO_2)
