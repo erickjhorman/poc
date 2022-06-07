@@ -15,7 +15,7 @@ import org.apache.beam.sdk.values.PCollection;
 public class Main {
     public static void main(String[] args) {
         PipelineOptionsFactory.register(SalesByQuarter.Options.class);
-        PipelineOptionsFactory.register(SalesByQuarter.Options.class);
+        PipelineOptionsFactory.register(ProductAvgPrice.Options.class);
 
         ScenarioOptions options = PipelineOptionsFactory.fromArgs(args)
                 .withValidation()
@@ -49,6 +49,7 @@ public class Main {
                 result.apply("Save to AVRO",
                         AvroIO.write(ProductAvgPrice.Result.class)
                                 .to(options.getTargetFile())
+                                .withoutSharding()
                                 .withSuffix(".avro"));
                 break;
             }
