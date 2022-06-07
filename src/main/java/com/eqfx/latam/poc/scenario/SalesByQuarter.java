@@ -25,8 +25,7 @@ import static java.util.Objects.requireNonNull;
 
 public interface SalesByQuarter {
 
-    static PCollection<Result> apply(Options options, PCollection<SaleOrder> sales){
-        List<Integer> years = options.getYears();
+    static PCollection<Result> apply(List<Integer> years, PCollection<SaleOrder> sales){
         return sales.apply("Filter years", Filter.by(sale-> sale.getDate().map(LocalDate::getYear).filter(years::contains).isPresent()))
                 .apply("Group by quarter and year", ParDo.of(new GroupSalesFn()))
                 .apply("Sum sales", Combine.perKey(Money::plus))
