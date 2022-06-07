@@ -13,6 +13,7 @@ public class GMessageReceiver implements MessageReceiver {
 
     @Override
     public void receiveMessage(PubsubMessage pubsubMessage, AckReplyConsumer consumer) {
+
         String eventType = pubsubMessage.getAttributesOrThrow("eventType");
         String filename = pubsubMessage.getAttributesOrThrow("objectId");
         consumer.ack();
