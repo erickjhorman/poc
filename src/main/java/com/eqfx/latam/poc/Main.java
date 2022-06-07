@@ -4,11 +4,9 @@ import com.eqfx.latam.poc.csv.CSVRecordMap;
 import com.eqfx.latam.poc.csv.CsvIO;
 import com.eqfx.latam.poc.csv.CsvParsers;
 import com.eqfx.latam.poc.model.Product;
-import com.eqfx.latam.poc.model.SaleOrder;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
 import com.eqfx.latam.poc.scenario.ScenarioTwoConsumer;
-import com.eqfx.latam.poc.util.Log;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -17,7 +15,7 @@ import org.apache.beam.sdk.values.PCollection;
 public class Main {
     public static void main(String[] args) {
         PipelineOptionsFactory.register(SalesByQuarter.Options.class);
-        PipelineOptionsFactory.register(SalesByQuarter.Options.class);
+        PipelineOptionsFactory.register(ProductAvgPrice.Options.class);
 
         ScenarioOptions options = PipelineOptionsFactory.fromArgs(args)
                 .withValidation()
@@ -51,6 +49,7 @@ public class Main {
                 result.apply("Save to AVRO",
                         AvroIO.write(ProductAvgPrice.Result.class)
                                 .to(options.getTargetFile())
+                                .withoutSharding()
                                 .withSuffix(".avro"));
                 break;
             }

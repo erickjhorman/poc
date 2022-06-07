@@ -21,10 +21,10 @@ public class CSVRecordMap implements Serializable {
        return new CSVRecordMap(record.getParser().getHeaderMap(),record);
     }
     public String get(final String name){
-        Optional<String> s = Optional.ofNullable(headerMap)
+        return Optional.ofNullable(headerMap)
                 .map(m -> m.get(name))
-                .map(record::get);
-        return s.orElseGet(()->record.get(name));
+                .map(record::get)
+                .orElse(null);
     }
     public String get(final int i){
         return record.get(i);
