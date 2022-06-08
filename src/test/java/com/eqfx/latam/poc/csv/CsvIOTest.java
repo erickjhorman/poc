@@ -15,8 +15,10 @@ public class CsvIOTest {
     @Test
     public void read() {
         CsvIO.Read csvIO = CsvIO.read("src/test/resources/products.csv")
-                .withHeaders("id", "name", "department")
-                .withDelimiter(',')
+                .withCsvTransformer(CsvTransformer.of()
+                        .withHeaders("id", "name", "department")
+                        .withDelimiter(',')
+                        .build())
                 .build();
         String format = "%s->%s,%s";
 
@@ -27,9 +29,9 @@ public class CsvIOTest {
                                 record.get("department"))
                         ));
         PAssert.that(records).containsInAnyOrder(
-                String.format(format,"1","Kellogs Special K Cereal","Kids"),
-                String.format(format,"2","Wine - Tribal Sauvignon","Kids"),
-                String.format(format,"8","Crab - Blue, Frozen","Electronics")
+                String.format(format, "1", "Kellogs Special K Cereal", "Kids"),
+                String.format(format, "2", "Wine - Tribal Sauvignon", "Kids"),
+                String.format(format, "8", "Crab - Blue, Frozen", "Electronics")
         );
         testPipeline.run().waitUntilFinish();
     }
