@@ -3,6 +3,7 @@ package com.eqfx.latam.poc;
 import com.eqfx.latam.poc.csv.CSVRecordMap;
 import com.eqfx.latam.poc.csv.CsvIO;
 import com.eqfx.latam.poc.csv.CsvParsers;
+import com.eqfx.latam.poc.csv.CsvTransformer;
 import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
@@ -23,18 +24,20 @@ public class Main {
 
         Pipeline pipeline = Pipeline.create(options);
 
-        switch (options.getScenario()){
+        switch (options.getScenario()) {
             case ONE: {
                 PCollection<CSVRecordMap> csvRecordMap = pipeline.apply("Reading from CSV",
                         CsvIO.read(options.getSourceFile())
-                                .withDelimiter(';')
-                                .withHeaders(	"ProductID", "ProductName",	"ProductNumber",	"MakeFlag",	"FinishedGoodsFlag",	"Color",
-                                        "SafetyStockLevel",	"ReorderPoint",	"StandardCost",	"ListPrice",	"Size",
-                                        "SizeUnitMeasureCode",	"WeightUnitMeasureCode",	"Weight",	"DaysToManufacture",
-                                        "ProductLine",	"Class",	"Style",	"ProductSubcategoryID",	"ProductModelID",
-                                        "SellStartDate",	"SellEndDate",	"DiscontinuedDate",	"SalesOrderDetailID",
-                                        "CarrierTrackingNumber",	"OrderQty",	"SpecialOfferID",	"UnitPrice",	"UnitPriceDiscount",
-                                        "LineTotal"
+                                .withCsvTransformer(CsvTransformer.of()
+                                        .withDelimiter(';')
+                                        .withHeaders("ProductID", "ProductName", "ProductNumber", "MakeFlag", "FinishedGoodsFlag", "Color",
+                                                "SafetyStockLevel", "ReorderPoint", "StandardCost", "ListPrice", "Size",
+                                                "SizeUnitMeasureCode", "WeightUnitMeasureCode", "Weight", "DaysToManufacture",
+                                                "ProductLine", "Class", "Style", "ProductSubcategoryID", "ProductModelID",
+                                                "SellStartDate", "SellEndDate", "DiscontinuedDate", "SalesOrderDetailID",
+                                                "CarrierTrackingNumber", "OrderQty", "SpecialOfferID", "UnitPrice", "UnitPriceDiscount",
+                                                "LineTotal"
+                                        ).build()
                                 )
                                 .build()
                 );
@@ -59,4 +62,17 @@ public class Main {
         }
         pipeline.run();
     }
+
+
+
+    /*
+       Event->Filter->Get file from cloud storage->do the rest
+
+       ---->*--->*--->
+
+            *--->
+     */
+
+
+
 }
