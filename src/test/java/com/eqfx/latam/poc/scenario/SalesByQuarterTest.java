@@ -47,11 +47,8 @@ public class SalesByQuarterTest {
 
     @Test
     public void apply() {
-        Options testOptions =
-                TestPipeline.testingPipelineOptions().as(Options.class);
-        testOptions.setYears(List.of(2013, 2014));
         PCollection<SaleOrder> saleOrderPCollection = testPipeline.apply("Create values From Sales", Create.of(sales));
-        PCollection<Result> resultPCollection = SalesByQuarter.apply(testOptions, saleOrderPCollection);
+        PCollection<Result> resultPCollection = SalesByQuarter.apply(List.of(2013, 2014), saleOrderPCollection);
         PAssert.that(resultPCollection).containsInAnyOrder(expected);
         testPipeline.run().waitUntilFinish();
 

@@ -18,7 +18,7 @@ public class CsvParsersTest {
 
     @Test
     public void product() throws Exception {
-        String[] headers=new String[]{"ProductCategoryID", "ProductSubcategoryID", "SellEndDate","UnitPrice","OrderQty"};
+        String[] headers=new String[]{"ProductCategoryID", "ProductSubcategoryID", "OrderDate","UnitPrice","OrderQty"};
         Create.Values<CSVRecordMap> lines = Create.of(
                 CSVRecordUtil.mockRecord(headers,"1","1","2014-01-01 00:00:00.000","50","1"),
                 CSVRecordUtil.mockRecord(headers,"2","2","2013-01-01 00:00:00.000","50","1"),
