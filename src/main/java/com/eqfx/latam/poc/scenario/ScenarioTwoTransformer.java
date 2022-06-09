@@ -9,6 +9,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 public class ScenarioTwoTransformer extends PTransform<PCollection<CSVRecordMap>, PDone> {
     private final SalesByQuarter.Options options;
@@ -17,8 +19,11 @@ public class ScenarioTwoTransformer extends PTransform<PCollection<CSVRecordMap>
     public PDone expand(PCollection<CSVRecordMap> csvRecordMap) {
         PCollection<SaleOrder> csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
         PCollection<SalesByQuarter.Result> result = SalesByQuarter.apply(options.getYears(), csvMapped);
-        return result.apply("Save to avro", AvroIO.write(SalesByQuarter.Result.class)
-                .to(options.getTargetFile())
-                .withSuffix(".avro"));
+        return result.apply("Save to avro",
+                AvroIO.write(SalesByQuarter.Result.class)
+                        .withWindowedWrites()
+                        .withoutSharding()
+                        .to(options.getTargetFile())
+                        .withSuffix(".avro"));
     }
 }

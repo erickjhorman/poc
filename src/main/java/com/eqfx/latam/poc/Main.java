@@ -2,18 +2,15 @@ package com.eqfx.latam.poc;
 
 import com.eqfx.latam.poc.csv.CSVRecordMap;
 import com.eqfx.latam.poc.csv.CsvParsers;
-import com.eqfx.latam.poc.model.Event;
 import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.scenario.GcpStorageCsvReaderFn;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
 import com.eqfx.latam.poc.scenario.ScenarioTwoTransformer;
-import com.eqfx.latam.poc.util.Log;
 import com.google.api.services.bigquery.model.TableRow;
 import lombok.RequiredArgsConstructor;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -73,9 +70,9 @@ public class Main {
     private static class FileUploadedTransformer extends DoFn<PubsubMessage, FileUploadedEvent> {
         @ProcessElement
         public void processElement(@Element PubsubMessage message, OutputReceiver<FileUploadedEvent> outputReceiver) {
-            String bucket = message.getAttribute("bucketId");
-            String filename = Objects.requireNonNull(message.getAttribute("objectId"));
-            Scenario scenario = Scenario.valueOf(filename.substring(0, 3));
+            var bucket = message.getAttribute("bucketId");
+            var filename = Objects.requireNonNull(message.getAttribute("objectId"));
+            var scenario = Scenario.valueOf(filename.substring(0, 3));
             outputReceiver.output(new FileUploadedEvent(filename, bucket, scenario));
         }
     }
@@ -113,20 +110,15 @@ public class Main {
                     .apply("Parse to Product", CsvParsers.products());
 
             PCollection<ProductAvgPrice.Result> result = ProductAvgPrice
-                            .apply(options.as(ProductAvgPrice.Options.class), products).apply(Log.ofElements());
+                            .apply(options.as(ProductAvgPrice.Options.class), products);
 
-            PCollection<TableRow> tableRowCollections = result.apply(ParDo.of(new ConvertorStringBq()));
-            tableRowCollections.apply(BigQueryIO.writeTableRows().to("cedar-router-268801.streaming.pubsubtest")  //name of the table in bigQuery
-                    .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER) // avoid recreating the table
-                    .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));   //append new data into an existing table
-
-           /* result.apply("Save to AVRO",
+            result.apply("Save to AVRO",
                             AvroIO.write(ProductAvgPrice.Result.class)
                                     .withWindowedWrites()
+                                    //.withNumShards(3)
                                     .to(options.getTargetFile())
                                     .withoutSharding()
-                                    .withSuffix(".avro"));*/
-            result.apply(Log.ofElements());
+                                    .withSuffix(".avro"));
         }
     }
 
