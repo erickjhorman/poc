@@ -24,6 +24,7 @@ public class GcpStorageCsvReaderFn implements SerializableFunction<FileUploadedE
     @Override
     public Iterable<CSVRecordMap> apply(FileUploadedEvent input) {
         Reader reader = ObjectReader.read(input.bucket, input.filename);
+
         try{
             return csvFormat.parse(reader)
                     .stream()

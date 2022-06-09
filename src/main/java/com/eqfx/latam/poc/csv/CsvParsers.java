@@ -35,13 +35,12 @@ public class CsvParsers {
         });
     }
 
-    public static CsvParser<Product> products(){
+    public static CsvParser<Product> products() {
         return CsvParser.of(Product.class).using(input -> {
             Integer id = Integer.parseInt(input.get("ProductID"));
             String name = input.get("ProductName");
             Money unitPrice = Money.of(CurrencyUnit.USD, Double.parseDouble(
                     input.get("UnitPrice").replace(',','.')), RoundingMode.HALF_UP);
-            System.out.println("here in products");
             return new Product(id, name, unitPrice);
         });
     }

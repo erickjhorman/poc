@@ -27,7 +27,6 @@ public interface ProductAvgPrice {
     static PCollection<Result> apply(Options options, PCollection<Product> products) {
 
         Money abovePrice = Money.of(CurrencyUnit.USD,options.getAbovePrice());
-
         return products.apply("Group product by id and name",ParDo.of(new GroupProductFn()))
                 .apply("Compute Average", Combine.perKey(new MoneyMean()))
                 .apply(String.format("Filter average price above %.2f", abovePrice.getAmount()),

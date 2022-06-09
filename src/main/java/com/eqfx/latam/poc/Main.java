@@ -2,13 +2,18 @@ package com.eqfx.latam.poc;
 
 import com.eqfx.latam.poc.csv.CSVRecordMap;
 import com.eqfx.latam.poc.csv.CsvParsers;
+import com.eqfx.latam.poc.model.Event;
 import com.eqfx.latam.poc.model.Product;
 import com.eqfx.latam.poc.scenario.GcpStorageCsvReaderFn;
 import com.eqfx.latam.poc.scenario.ProductAvgPrice;
 import com.eqfx.latam.poc.scenario.SalesByQuarter;
+import com.eqfx.latam.poc.scenario.ScenarioTwoTransformer;
+import com.eqfx.latam.poc.util.Log;
+import com.google.api.services.bigquery.model.TableRow;
 import lombok.RequiredArgsConstructor;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubMessage;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -16,9 +21,12 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.commons.csv.CSVFormat;
+import org.joda.time.Duration;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -47,9 +55,10 @@ public class Main {
                     String eventType = e.getAttribute("eventType");
                     return OBJECT_FINALIZE.equals(eventType);
                 }))
-                .apply("Map to event", ParDo.of(new FileUploadedTransformer()));
+                .apply("Map to event", ParDo.of(new FileUploadedTransformer()))
+                .apply("Applying windowing", Window.into(FixedWindows.of(Duration.standardSeconds(60))));
 
-        ExecuteScenario.apply(options,pCollection);
+        ExecuteScenario.apply(options, pCollection);
 
         pipeline.run();
     }
@@ -72,7 +81,7 @@ public class Main {
     }
 
     private interface ExecuteScenario {
-        static void apply(ScenarioOptions options, PCollection<FileUploadedEvent> pCollection){
+        static void apply(ScenarioOptions options, PCollection<FileUploadedEvent> pCollection) {
             pCollection
                     .apply("Filter Scenario Two",Filter.by(e->e.scenario.equals(Scenario.TWO)))
                     .apply("Map To CSV RECORD",FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
@@ -81,7 +90,9 @@ public class Main {
                             .setDelimiter(DELIMITER_SCENARIO_2)
                             .setSkipHeaderRecord(true)
                             .setNullString("NULL")
-                            .build())));
+                            .build())))
+                    .apply(new ScenarioTwoTransformer(options.as(SalesByQuarter.Options.class)));
+
 
             PCollection<Product> products = pCollection
                     .apply("Filter Scenario One", Filter.by(e -> e.scenario.equals(Scenario.ONE)))
@@ -98,16 +109,35 @@ public class Main {
                                     .setSkipHeaderRecord(true)
                                     .setNullString("NULL")
                                     .build())))
+
                     .apply("Parse to Product", CsvParsers.products());
 
             PCollection<ProductAvgPrice.Result> result = ProductAvgPrice
-                            .apply(options.as(ProductAvgPrice.Options.class), products);
+                            .apply(options.as(ProductAvgPrice.Options.class), products).apply(Log.ofElements());
 
-            result.apply("Save to AVRO",
+            PCollection<TableRow> tableRowCollections = result.apply(ParDo.of(new ConvertorStringBq()));
+            tableRowCollections.apply(BigQueryIO.writeTableRows().to("cedar-router-268801.streaming.pubsubtest")  //name of the table in bigQuery
+                    .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER) // avoid recreating the table
+                    .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));   //append new data into an existing table
+
+           /* result.apply("Save to AVRO",
                             AvroIO.write(ProductAvgPrice.Result.class)
+                                    .withWindowedWrites()
                                     .to(options.getTargetFile())
                                     .withoutSharding()
-                                    .withSuffix(".avro"));
+                                    .withSuffix(".avro"));*/
+            result.apply(Log.ofElements());
+        }
+    }
+
+    private static class ConvertorStringBq extends DoFn<ProductAvgPrice.Result, TableRow> {
+        @ProcessElement
+        public void processing(@Element ProductAvgPrice.Result elem, ProcessContext pc) {
+            TableRow tableRow = new TableRow();
+            tableRow.set("message", elem.getName());
+            tableRow.set("messageid", elem.getId() + ":" + pc.timestamp().toString());
+            tableRow.set("messageprocessingtime", pc.timestamp().toString());
+            pc.output(tableRow);
         }
     }
 }
