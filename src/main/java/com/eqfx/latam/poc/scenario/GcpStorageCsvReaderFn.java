@@ -23,8 +23,8 @@ public class GcpStorageCsvReaderFn implements SerializableFunction<FileUploadedE
 
     @Override
     public Iterable<CSVRecordMap> apply(FileUploadedEvent input) {
-        Reader reader = ObjectReader.read(input.bucket, input.filename);
         try{
+            Reader reader = ObjectReader.read(input.bucket, input.filename);
             return csvFormat.parse(reader)
                     .stream()
                     .map(CSVRecordMap::valueOf)

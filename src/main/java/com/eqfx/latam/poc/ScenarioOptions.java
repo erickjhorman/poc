@@ -6,8 +6,6 @@ import org.apache.beam.sdk.options.Validation;
 
 public interface ScenarioOptions extends PipelineOptions {
 
-
-
     @Description("target avro file")
     @Validation.Required
     String getTargetFile();

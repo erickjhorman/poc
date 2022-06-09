@@ -16,9 +16,12 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.windowing.Sessions;
+import org.apache.beam.sdk.transforms.windowing.Window;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.commons.csv.CSVFormat;
+import org.joda.time.Duration;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -40,14 +43,14 @@ public class Main {
 
         Pipeline pipeline = Pipeline.create(options);
 
-        String topicId = "projects/cedar-router-268801/subscriptions/poc_pubsub-sub";
 
-        PCollection<FileUploadedEvent> pCollection = pipeline.apply("Read from subscription", PubsubIO.readMessagesWithAttributes().fromSubscription(topicId))
+        PCollection<FileUploadedEvent> pCollection = pipeline.apply("Read from subscription", PubsubIO.readMessagesWithAttributes().fromSubscription(options.getSubscriptionId()))
                 .apply("Filter event type", Filter.by(e -> {
                     String eventType = e.getAttribute("eventType");
                     return OBJECT_FINALIZE.equals(eventType);
                 }))
-                .apply("Map to event", ParDo.of(new FileUploadedTransformer()));
+                .apply("Map to event", ParDo.of(new FileUploadedTransformer()))
+                .apply("Applying windowing", Window.into(Sessions.withGapDuration(Duration.standardSeconds(5))));
 
         ExecuteScenario.apply(options,pCollection);
 
@@ -75,7 +78,7 @@ public class Main {
         static void apply(ScenarioOptions options, PCollection<FileUploadedEvent> pCollection){
             pCollection
                     .apply("Filter Scenario Two",Filter.by(e->e.scenario.equals(Scenario.TWO)))
-                    .apply("Map To CSV RECORD",FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
+                    .apply("Map Scenario Two to CSV record",FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
                     .via(new GcpStorageCsvReaderFn(CSVFormat.Builder.create()
                             .setHeader(Objects.requireNonNull(HEADERS_SCENARIO_2))
                             .setDelimiter(DELIMITER_SCENARIO_2)
@@ -85,7 +88,7 @@ public class Main {
 
             PCollection<Product> products = pCollection
                     .apply("Filter Scenario One", Filter.by(e -> e.scenario.equals(Scenario.ONE)))
-                    .apply("Map To CSV RECORD", FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
+                    .apply("Map Scenario One to CSV record", FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
                             .via(new GcpStorageCsvReaderFn(CSVFormat.Builder.create()
                                     .setHeader("ProductID", "ProductName", "ProductNumber", "MakeFlag", "FinishedGoodsFlag", "Color",
                                             "SafetyStockLevel", "ReorderPoint", "StandardCost", "ListPrice", "Size",
@@ -107,6 +110,7 @@ public class Main {
                             AvroIO.write(ProductAvgPrice.Result.class)
                                     .to(options.getTargetFile())
                                     .withoutSharding()
+                                    .withWindowedWrites()
                                     .withSuffix(".avro"));
         }
     }
