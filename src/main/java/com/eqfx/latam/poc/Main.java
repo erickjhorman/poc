@@ -45,7 +45,7 @@ public class Main {
 
         Pipeline pipeline = Pipeline.create(options);
 
-        String topicId = "projects/cedar-router-268801/subscriptions/poc_pubsub-sub";
+        String topicId = "projects/cedar-router-268801/subscriptions/" + options.getSubscriptionId();
 
         PCollection<FileUploadedEvent> pCollection = pipeline.apply("Read from subscription", PubsubIO.readMessagesWithAttributes().fromSubscription(topicId))
                 .apply("Filter event type", Filter.by(e -> {
@@ -91,7 +91,7 @@ public class Main {
                     .apply(new ScenarioTwoTransformer(options.as(SalesByQuarter.Options.class)));
 
 
-            PCollection<Product> products = pCollection
+                var products = pCollection
                     .apply("Filter Scenario One", Filter.by(e -> e.scenario.equals(Scenario.ONE)))
                     .apply("Map To CSV RECORD", FlatMapElements.into(TypeDescriptor.of(CSVRecordMap.class))
                             .via(new GcpStorageCsvReaderFn(CSVFormat.Builder.create()
@@ -109,27 +109,16 @@ public class Main {
 
                     .apply("Parse to Product", CsvParsers.products());
 
-            PCollection<ProductAvgPrice.Result> result = ProductAvgPrice
+              var result = ProductAvgPrice
                             .apply(options.as(ProductAvgPrice.Options.class), products);
 
-            result.apply("Save to AVRO",
+                 result.apply("Save to AVRO",
                             AvroIO.write(ProductAvgPrice.Result.class)
                                     .withWindowedWrites()
                                     //.withNumShards(3)
                                     .to(options.getTargetFile())
                                     .withoutSharding()
                                     .withSuffix(".avro"));
-        }
-    }
-
-    private static class ConvertorStringBq extends DoFn<ProductAvgPrice.Result, TableRow> {
-        @ProcessElement
-        public void processing(@Element ProductAvgPrice.Result elem, ProcessContext pc) {
-            TableRow tableRow = new TableRow();
-            tableRow.set("message", elem.getName());
-            tableRow.set("messageid", elem.getId() + ":" + pc.timestamp().toString());
-            tableRow.set("messageprocessingtime", pc.timestamp().toString());
-            pc.output(tableRow);
         }
     }
 }

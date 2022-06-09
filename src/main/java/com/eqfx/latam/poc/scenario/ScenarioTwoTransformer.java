@@ -17,8 +17,8 @@ public class ScenarioTwoTransformer extends PTransform<PCollection<CSVRecordMap>
 
     @Override
     public PDone expand(PCollection<CSVRecordMap> csvRecordMap) {
-        PCollection<SaleOrder> csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
-        PCollection<SalesByQuarter.Result> result = SalesByQuarter.apply(options.getYears(), csvMapped);
+        var csvMapped = csvRecordMap.apply("Parse to Sale", CsvParsers.saleOrders());
+        var result = SalesByQuarter.apply(options.getYears(), csvMapped);
         return result.apply("Save to avro",
                 AvroIO.write(SalesByQuarter.Result.class)
                         .withWindowedWrites()
